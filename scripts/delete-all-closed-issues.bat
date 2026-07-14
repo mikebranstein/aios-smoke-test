@@ -27,7 +27,7 @@ if not defined REPO (
 
 echo Target repo: %REPO%
 echo.
-echo WARNING: This will permanently DELETE all currently open issues in %REPO%.
+echo WARNING: This will permanently DELETE all currently closed issues in %REPO%.
 echo This action is destructive and cannot be undone.
 set /p CONFIRM=Type DELETE to continue: 
 if /I not "%CONFIRM%"=="DELETE" (
@@ -36,10 +36,10 @@ if /I not "%CONFIRM%"=="DELETE" (
 )
 
 set "COUNT=0"
-set "ISSUE_LIST_FILE=%TEMP%\gh-open-issues-%RANDOM%%RANDOM%.txt"
-gh issue list -R "%REPO%" --state=open --limit=1000 --json number --jq ".[].number" > "%ISSUE_LIST_FILE%"
+set "ISSUE_LIST_FILE=%TEMP%\gh-closed-issues-%RANDOM%%RANDOM%.txt"
+gh issue list -R "%REPO%" --state=closed --limit=1000 --json number --jq ".[].number" > "%ISSUE_LIST_FILE%"
 if errorlevel 1 (
-  echo ERROR: Failed to fetch open issues.
+  echo ERROR: Failed to fetch closed issues.
   if exist "%ISSUE_LIST_FILE%" del /q "%ISSUE_LIST_FILE%" >nul 2>&1
   exit /b 1
 )
@@ -54,7 +54,7 @@ for /f "usebackq delims=" %%I in ("%ISSUE_LIST_FILE%") do (
 if exist "%ISSUE_LIST_FILE%" del /q "%ISSUE_LIST_FILE%" >nul 2>&1
 
 if "%COUNT%"=="0" (
-  echo No open issues found.
+  echo No closed issues found.
 ) else (
   echo Done. Attempted to delete %COUNT% issue^(s^).
 )
