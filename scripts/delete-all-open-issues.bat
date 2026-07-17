@@ -13,26 +13,48 @@ if errorlevel 1 (
   exit /b 1
 )
 
-set "REPO=%~1"
+set "REPO="
+set "SKIP_CONFIRM=0"
+
+for %%A in (%*) do (
+  if /I "%%~A"=="--yes" (
+    set "SKIP_CONFIRM=1"
+  ) else if /I "%%~A"=="-y" (
+    set "SKIP_CONFIRM=1"
+  ) else if /I "%%~A"=="/y" (
+    set "SKIP_CONFIRM=1"
+  ) else if /I "%%~A"=="--no-prompt" (
+    set "SKIP_CONFIRM=1"
+  ) else if /I "%%~A"=="/no-prompt" (
+    set "SKIP_CONFIRM=1"
+  ) else if not defined REPO (
+    set "REPO=%%~A"
+  )
+)
+
 if not defined REPO (
   for /f "delims=" %%R in ('gh repo view --json nameWithOwner --jq ".nameWithOwner" 2^>nul') do set "REPO=%%R"
 )
 
 if not defined REPO (
   echo ERROR: Could not determine target repo.
-  echo Usage: %~nx0 OWNER/REPO
-  echo Example: %~nx0 octocat/Hello-World
+  echo Usage: %~nx0 [OWNER/REPO] [--yes^|-y^|/y^|--no-prompt^|/no-prompt]
+  echo Example: %~nx0 octocat/Hello-World --yes
   exit /b 1
 )
 
 echo Target repo: %REPO%
 echo.
-echo WARNING: This will permanently DELETE all currently open issues in %REPO%.
-echo This action is destructive and cannot be undone.
-set /p CONFIRM=Type DELETE to continue: 
-if /I not "%CONFIRM%"=="DELETE" (
-  echo Aborted.
-  exit /b 1
+if "%SKIP_CONFIRM%"=="1" (
+  echo WARNING: Confirmation prompt skipped by switch.
+) else (
+  echo WARNING: This will permanently DELETE all currently open issues in %REPO%.
+  echo This action is destructive and cannot be undone.
+  set /p CONFIRM=Type DELETE to continue: 
+  if /I not "%CONFIRM%"=="DELETE" (
+    echo Aborted.
+    exit /b 1
+  )
 )
 
 set "COUNT=0"
